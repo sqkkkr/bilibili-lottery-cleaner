@@ -1,0 +1,214 @@
+/* 面板样式：中性灰为主，圆角克制，不用大色块 */
+#blcl-root {
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-size: 12px;
+  color: #18191c;
+  line-height: 1.6;
+}
+
+/* ---------- 悬浮入口 ---------- */
+#blcl-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 99998;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: #18191c;
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: .3px;
+  cursor: pointer;
+  opacity: .92;
+}
+#blcl-fab:hover { opacity: 1; }
+
+/* ---------- 面板 ---------- */
+#blcl-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 60px;
+  z-index: 99999;
+  width: 460px;
+  max-height: 76vh;
+  overflow: hidden auto;
+  padding: 14px 16px 12px;
+  background: #fff;
+  border: 1px solid #e5e6e8;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .08);
+}
+#blcl-panel[hidden] { display: none; }
+
+.b-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.b-title { font-size: 13px; font-weight: 500; letter-spacing: .2px; }
+.b-mode { font-size: 11px; color: #8a8f99; }
+.b-x {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  color: #b4b7bd;
+  cursor: pointer;
+}
+.b-x:hover { color: #18191c; }
+
+/* ---------- 三个统计 ---------- */
+.b-sum {
+  display: flex;
+  border: 1px solid #e5e6e8;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.b-sum-i {
+  flex: 1;
+  padding: 8px 0 7px;
+  text-align: center;
+  border-left: 1px solid #e5e6e8;
+}
+.b-sum-i:first-child { border-left: 0; }
+.b-num { font-size: 18px; font-weight: 500; letter-spacing: -.3px; line-height: 1.2; }
+.b-cap { font-size: 11px; color: #8a8f99; margin-top: 1px; }
+
+.b-status {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: #8a8f99;
+  word-break: break-all;
+}
+
+/* ---------- 操作条 ---------- */
+.b-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.b-bar-thin { color: #8a8f99; }
+.b-spacer { flex: 1; }
+
+.b-btn {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid #dcdee2;
+  border-radius: 4px;
+  background: #fff;
+  color: #18191c;
+  font-size: 12px;
+  cursor: pointer;
+}
+.b-btn:hover:not(:disabled) { border-color: #b4b7bd; }
+.b-btn:disabled { opacity: .4; cursor: not-allowed; }
+.b-primary {
+  background: #18191c;
+  border-color: #18191c;
+  color: #fff;
+}
+.b-primary:hover:not(:disabled) { background: #303136; border-color: #303136; }
+.b-danger { color: #c5372f; border-color: #e8d2d0; }
+.b-danger:hover:not(:disabled) { border-color: #c5372f; }
+
+.b-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  color: #6b7280;
+  cursor: pointer;
+}
+.b-link:hover { color: #18191c; }
+
+.b-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #6b7280;
+  cursor: pointer;
+}
+.b-check input[type="number"] {
+  width: 44px;
+  height: 22px;
+  padding: 0 4px;
+  border: 1px solid #dcdee2;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #18191c;
+}
+
+/* ---------- 列表 ---------- */
+.b-list {
+  max-height: 300px;
+  overflow: auto;
+  border: 1px solid #e5e6e8;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.b-row {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f2f3;
+  border-left: 2px solid transparent;
+}
+.b-row:last-child { border-bottom: 0; }
+.b-row.del { border-left-color: #d93a3a; }
+.b-row.pro { border-left-color: #4b7d2e; }
+.b-row.skip { border-left-color: #d8dade; }
+
+.b-pick { padding-top: 2px; }
+.b-body { min-width: 0; flex: 1; }
+
+.b-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.b-tag { font-size: 11px; color: #6b7280; flex: none; }
+.b-row.del .b-tag { color: #c5372f; }
+.b-row.pro .b-tag { color: #4b7d2e; }
+.b-time { font-size: 11px; color: #b4b7bd; flex: none; }
+
+.b-sub {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: #8a8f99;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.b-sub a { color: #8a8f99; margin-left: 6px; text-decoration: none; border-bottom: 1px solid #dcdee2; }
+.b-sub a:hover { color: #18191c; border-bottom-color: #18191c; }
+
+.b-empty { padding: 20px; text-align: center; color: #b4b7bd; font-size: 12px; }
+
+/* ---------- 日志 ---------- */
+.b-loghead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #f1f2f3;
+}
+/* 高度写死：日志一多面板就会往上长，按钮跟着跑，点"停止"很别扭 */
+.b-log {
+  height: 150px;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #9aa0a6;
+}
+.b-log div { padding: 1px 0; word-break: break-all; }
+.b-tip { font-size: 11px; color: #b4b7bd; }

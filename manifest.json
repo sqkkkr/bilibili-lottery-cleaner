@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "B站抽奖动态清理器",
+  "version": "1.0.0",
+  "minimum_chrome_version": "111",
+  "description": "自动扫描空间动态，只清理已开奖的转发抽奖动态；未开奖、判定不出的一律保护。",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://space.bilibili.com/*"
+      ],
+      "js": [
+        "src/config.js",
+        "src/md5.js",
+        "src/utils.js",
+        "src/net.js",
+        "src/parser.js",
+        "src/lottery.js",
+        "src/scanner.js",
+        "src/deleter.js",
+        "src/ui.js",
+        "src/main.js"
+      ],
+      "css": [
+        "styles/panel.css"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}
