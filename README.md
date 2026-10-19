@@ -1,6 +1,6 @@
 # B站抽奖动态清理器
 
-Chrome / Edge 扩展，版本 1.0.0，MIT 协议。
+版本 1.0.0，MIT 协议。有油猴脚本和浏览器扩展两种装法，功能完全一样。
 
 用来删自己空间里已经开完奖的转发抽奖动态。
 
@@ -8,16 +8,31 @@ Chrome / Edge 扩展，版本 1.0.0，MIT 协议。
 
 ## 安装
 
-要求 Chrome 或 Edge 111 以上。插件用到了 MV3 的 `world: "MAIN"`，这个字段从 111 才开始支持，所以清单里写了 `minimum_chrome_version`，版本不够的话浏览器会直接拒绝安装，不会装上去才发现不对劲。两个浏览器用同一份代码，步骤一样。
+### 方式一：油猴脚本（推荐）
 
-1. 下载仓库（Code → Download ZIP，或者去 Releases 下）
+先装 [Tampermonkey](https://www.tampermonkey.net/)。装完还有一步别漏：Chrome / Edge 的扩展管理页要打开「开发者模式」，再进 Tampermonkey 的详情页把**「允许运行用户脚本」**打开，不然脚本不会执行。
+
+然后选一个源，点开就会弹出油猴的安装页：
+
+- [jsDelivr（推荐，国内能访问）](https://cdn.jsdelivr.net/gh/sqkkkr/bilibili-lottery-cleaner@main/bilibili-lottery-cleaner.user.js)
+- [GitHub 直链](https://github.com/sqkkkr/bilibili-lottery-cleaner/raw/main/bilibili-lottery-cleaner.user.js)（国内可能打不开）
+
+装完打开自己的空间动态页，刷新一下，右下角出现按钮就生效了。
+
+以后脚本有更新，油猴会自己检查并提示，不用手动重装。
+
+### 方式二：浏览器扩展（备用）
+
+不想装油猴的话用这个。要求 Chrome 或 Edge 111 以上——插件用到了 MV3 的 `world: "MAIN"`，这个字段从 111 才开始支持，所以清单里写了 `minimum_chrome_version`，版本不够浏览器会直接拒绝安装。
+
+1. 去 [Releases](https://github.com/sqkkkr/bilibili-lottery-cleaner/releases) 下载 zip
 2. 解压到一个固定位置，别放临时目录，那个目录删了插件就失效
 3. 地址栏打开 `chrome://extensions`（Edge 是 `edge://extensions`）
 4. 打开右上角的开发者模式（Edge 在左下角）
 5. 点「加载已解压的扩展程序」，选中**里面含 `manifest.json` 的那一层文件夹**
 6. 打开 `https://space.bilibili.com/你的UID/dynamic` 刷新一下，右下角出现按钮就装好了
 
-它只在个人空间的动态页启动。首页、视频页、别人的空间都不会出现面板，也不会发请求。
+两种装法都只在个人空间的动态页启动。首页、视频页、别人的空间都不会出现面板，也不会发请求。
 
 ## 怎么用
 
@@ -94,6 +109,7 @@ Chrome / Edge 扩展，版本 1.0.0，MIT 协议。
 
 ```
 bilibili-lottery-cleaner/
+├── bilibili-lottery-cleaner.user.js  油猴版，由 tools 构建生成，不要手改
 ├── manifest.json        扩展清单（MV3）
 ├── icons/               16 / 32 / 48 / 128 四档图标
 ├── src/
@@ -109,9 +125,18 @@ bilibili-lottery-cleaner/
 │   └── main.js          入口装配
 ├── styles/panel.css     面板样式
 ├── test/                本地测试，不需要浏览器
+├── tools/               构建脚本（打包油猴版、生成图标）
 ├── LICENSE
 └── README.md
 ```
+
+油猴版是从 `src/` 打包出来的单文件。改完代码要跑一遍：
+
+```bash
+python tools/build_userscript.py
+```
+
+它会按顺序拼模块、把 CSS 内联进去，版本号自动从 `src/config.js` 读。
 
 ## 本地测试
 
