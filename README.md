@@ -23,7 +23,7 @@
 
 ### 方式二：浏览器扩展（备用）
 
-不想装油猴的话用这个。要求 Chrome 或 Edge 111 以上——插件用到了 MV3 的 `world: "MAIN"`，这个字段从 111 才开始支持，所以清单里写了 `minimum_chrome_version`，版本不够浏览器会直接拒绝安装。
+方法一失效的话用这个。要求 Chrome 或 Edge 111 以上——插件用到了 MV3 的 `world: "MAIN"`，这个字段从 111 才开始支持，所以清单里写了 `minimum_chrome_version`，版本不够浏览器会直接拒绝安装。
 
 1. 去 [Releases](https://github.com/sqkkkr/bilibili-lottery-cleaner/releases) 下载 zip
 2. 解压到一个固定位置，别放临时目录，那个目录删了插件就失效
