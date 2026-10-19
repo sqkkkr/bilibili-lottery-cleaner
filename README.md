@@ -15,6 +15,7 @@
 然后选一个源，点开就会弹出油猴的安装页：
 
 - [GitHub（推荐）](https://github.com/sqkkkr/bilibili-lottery-cleaner/raw/main/bilibili-lottery-cleaner.user.js)
+- [GreasyFork](https://greasyfork.org/zh-CN/scripts/600946)（国内能访问，装完自动更新）
 - [jsDelivr（备用）](https://cdn.jsdelivr.net/gh/sqkkkr/bilibili-lottery-cleaner@main/bilibili-lottery-cleaner.user.js)
 
 装完打开自己的空间动态页，刷新一下，右下角出现按钮就生效了。
