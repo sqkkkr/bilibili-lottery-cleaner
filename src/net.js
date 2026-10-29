@@ -1,4 +1,4 @@
-/* 网络层：请求封装 + 拦截页面请求 + 动态列表接口 */
+/* 网络层：请求封装 + 动态列表接口 */
 (function () {
   'use strict';
   var B = window.BLCL;
@@ -9,66 +9,25 @@
   N.requestJson = function (url, opts) {
     opts = opts || {};
     return new Promise(function (resolve, reject) {
-      var timer = setTimeout(function () { reject(new Error('超时')); }, opts.timeout || CFG.probeTimeout);
+      var controller = new AbortController();
+      var timer = setTimeout(function () {
+        reject(new Error('超时'));
+        controller.abort();
+      }, opts.timeout || CFG.probeTimeout);
       fetch(url, {
         method: opts.method || 'GET',
         credentials: 'include',
         headers: Object.assign({ Accept: 'application/json' }, opts.headers || {}),
-        body: opts.body
-      }).then(function (r) { return r.json(); })
+        body: opts.body,
+        signal: controller.signal
+      }).then(function (r) {
+        if (r.status === 412) return { code: 412, message: 'HTTP 412（请求受限）' };
+        return r.json();
+      })
         .then(function (j) { clearTimeout(timer); resolve(j); })
         .catch(function (e) { clearTimeout(timer); reject(e); });
     });
   };
-
-  /* ---------- 拦截页面的动态列表请求 ----------
-     这是最准的数据来源：页面自己发的请求，带完整签名和 Cookie，我们只读响应副本。 */
-  N.installHooks = function (onFeedJson) {
-    if (N.__hooked) return;   /* 幂等：SPA 来回切换时不重复包装 */
-    N.__hooked = true;
-
-    /* 命中计数，用来判断"拦截到底有没有生效" */
-    var wrapped = function (j) {
-      N.hits++;
-      try { onFeedJson(j); } catch (e) {}
-    };
-
-    /* fetch */
-    var origFetch = window.fetch;
-    if (typeof origFetch === 'function') {
-      window.fetch = function () {
-        var p = origFetch.apply(this, arguments);
-        try {
-          var u = typeof arguments[0] === 'string' ? arguments[0] : (arguments[0] && arguments[0].url);
-          if (u && String(u).indexOf('feed/space') > -1) {
-            p.then(function (res) {
-              try { res.clone().json().then(wrapped).catch(function () {}); } catch (e) {}
-              return res;
-            }).catch(function () {});
-          }
-        } catch (e) {}
-        return p;
-      };
-    }
-    /* XMLHttpRequest（B站前端用的是 axios，走 XHR） */
-    var OP = XMLHttpRequest.prototype.open;
-    var SE = XMLHttpRequest.prototype.send;
-    XMLHttpRequest.prototype.open = function () {
-      this.__blclUrl = String(arguments[1] || '');
-      return OP.apply(this, arguments);
-    };
-    XMLHttpRequest.prototype.send = function () {
-      var self = this;
-      this.addEventListener('load', function () {
-        if (!self.__blclUrl || self.__blclUrl.indexOf('feed/space') === -1) return;
-        try { wrapped(JSON.parse(self.responseText)); } catch (e) {}
-      });
-      return SE.apply(this, arguments);
-    };
-  };
-
-  /* 拦截命中次数，用来判断拦截到底生效没有 */
-  N.hits = 0;
 
   /* ---------- WBI 签名 ----------
      B站部分接口要 w_rid + wts，不带就返回 -352 / -403。
@@ -140,6 +99,7 @@
     for (var i = 0; i < eps.length; i++) {
       try {
         var j = await N.requestJson(eps[i] + new URLSearchParams(params).toString(), { timeout: 12000 });
+        if (j && (j.code === 412 || j.code === -412)) return j;
         if (j && j.code === 0) { N.signMode = 'none'; return j; }
         last = j;
       } catch (e) {
@@ -153,6 +113,7 @@
     for (var k = 0; k < eps.length; k++) {
       try {
         var j2 = await N.requestJson(eps[k] + signedQuery(params), { timeout: 12000 });
+        if (j2 && (j2.code === 412 || j2.code === -412)) return j2;
         if (j2 && j2.code === 0) { N.signMode = 'wbi'; return j2; }
         last = j2;
       } catch (e2) {

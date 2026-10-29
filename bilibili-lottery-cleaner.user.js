@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站抽奖动态清理器
 // @namespace    https://github.com/sqkkkr/bilibili-lottery-cleaner
-// @version      1.0.0
+// @version      1.0.2
 // @description  自动扫描空间动态，只清理已开奖的转发抽奖动态；未开奖、判定不出的一律保护。
 // @author       sqkkkr
 // @match        https://space.bilibili.com/*
@@ -22,7 +22,7 @@
 
 /* ---------- 样式注入：油猴不能用 manifest 的 css 字段 ---------- */
 (function () {
-  var css = '/* 面板样式：中性灰为主，圆角克制，不用大色块 */\n#blcl-root {\n  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;\n  font-size: 12px;\n  color: #18191c;\n  line-height: 1.6;\n}\n\n/* ---------- 悬浮入口 ---------- */\n#blcl-fab {\n  position: fixed;\n  right: 20px;\n  bottom: 20px;\n  z-index: 99998;\n  height: 32px;\n  padding: 0 12px;\n  border: 0;\n  border-radius: 6px;\n  background: #18191c;\n  color: #fff;\n  font-size: 12px;\n  letter-spacing: .3px;\n  cursor: pointer;\n  opacity: .92;\n}\n#blcl-fab:hover { opacity: 1; }\n\n/* ---------- 面板 ---------- */\n#blcl-panel {\n  position: fixed;\n  right: 20px;\n  bottom: 60px;\n  z-index: 99999;\n  width: 460px;\n  max-height: 76vh;\n  overflow: hidden auto;\n  padding: 14px 16px 12px;\n  background: #fff;\n  border: 1px solid #e5e6e8;\n  border-radius: 8px;\n  box-shadow: 0 6px 24px rgba(0, 0, 0, .08);\n}\n#blcl-panel[hidden] { display: none; }\n\n.b-head {\n  display: flex;\n  align-items: baseline;\n  gap: 8px;\n  margin-bottom: 12px;\n}\n.b-title { font-size: 13px; font-weight: 500; letter-spacing: .2px; }\n.b-mode { font-size: 11px; color: #8a8f99; }\n.b-x {\n  margin-left: auto;\n  border: 0;\n  background: none;\n  padding: 0;\n  font-size: 16px;\n  line-height: 1;\n  color: #b4b7bd;\n  cursor: pointer;\n}\n.b-x:hover { color: #18191c; }\n\n/* ---------- 三个统计 ---------- */\n.b-sum {\n  display: flex;\n  border: 1px solid #e5e6e8;\n  border-radius: 6px;\n  overflow: hidden;\n  margin-bottom: 10px;\n}\n.b-sum-i {\n  flex: 1;\n  padding: 8px 0 7px;\n  text-align: center;\n  border-left: 1px solid #e5e6e8;\n}\n.b-sum-i:first-child { border-left: 0; }\n.b-num { font-size: 18px; font-weight: 500; letter-spacing: -.3px; line-height: 1.2; }\n.b-cap { font-size: 11px; color: #8a8f99; margin-top: 1px; }\n\n.b-status {\n  margin: 0 0 10px;\n  font-size: 11px;\n  color: #8a8f99;\n  word-break: break-all;\n}\n\n/* ---------- 操作条 ---------- */\n.b-bar {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-bottom: 8px;\n  flex-wrap: wrap;\n}\n.b-bar-thin { color: #8a8f99; }\n.b-spacer { flex: 1; }\n\n.b-btn {\n  height: 28px;\n  padding: 0 12px;\n  border: 1px solid #dcdee2;\n  border-radius: 4px;\n  background: #fff;\n  color: #18191c;\n  font-size: 12px;\n  cursor: pointer;\n}\n.b-btn:hover:not(:disabled) { border-color: #b4b7bd; }\n.b-btn:disabled { opacity: .4; cursor: not-allowed; }\n.b-primary {\n  background: #18191c;\n  border-color: #18191c;\n  color: #fff;\n}\n.b-primary:hover:not(:disabled) { background: #303136; border-color: #303136; }\n.b-danger { color: #c5372f; border-color: #e8d2d0; }\n.b-danger:hover:not(:disabled) { border-color: #c5372f; }\n\n.b-link {\n  border: 0;\n  background: none;\n  padding: 0;\n  font-size: 12px;\n  color: #6b7280;\n  cursor: pointer;\n}\n.b-link:hover { color: #18191c; }\n\n.b-check {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 11px;\n  color: #6b7280;\n  cursor: pointer;\n}\n.b-check input[type="number"] {\n  width: 44px;\n  height: 22px;\n  padding: 0 4px;\n  border: 1px solid #dcdee2;\n  border-radius: 4px;\n  font-size: 11px;\n  color: #18191c;\n}\n\n/* ---------- 列表 ---------- */\n.b-list {\n  max-height: 300px;\n  overflow: auto;\n  border: 1px solid #e5e6e8;\n  border-radius: 6px;\n  margin-bottom: 8px;\n}\n.b-row {\n  display: flex;\n  gap: 8px;\n  padding: 8px 10px;\n  border-bottom: 1px solid #f1f2f3;\n  border-left: 2px solid transparent;\n}\n.b-row:last-child { border-bottom: 0; }\n.b-row.del { border-left-color: #d93a3a; }\n.b-row.pro { border-left-color: #4b7d2e; }\n.b-row.skip { border-left-color: #d8dade; }\n\n.b-pick { padding-top: 2px; }\n.b-body { min-width: 0; flex: 1; }\n\n.b-line {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.b-tag { font-size: 11px; color: #6b7280; flex: none; }\n.b-row.del .b-tag { color: #c5372f; }\n.b-row.pro .b-tag { color: #4b7d2e; }\n.b-time { font-size: 11px; color: #b4b7bd; flex: none; }\n\n.b-sub {\n  flex: 1;\n  min-width: 0;\n  font-size: 11px;\n  color: #8a8f99;\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n}\n.b-sub a { color: #8a8f99; margin-left: 6px; text-decoration: none; border-bottom: 1px solid #dcdee2; }\n.b-sub a:hover { color: #18191c; border-bottom-color: #18191c; }\n\n.b-empty { padding: 20px; text-align: center; color: #b4b7bd; font-size: 12px; }\n\n/* ---------- 日志 ---------- */\n.b-loghead {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding-top: 6px;\n  border-top: 1px solid #f1f2f3;\n}\n/* 高度写死：日志一多面板就会往上长，按钮跟着跑，点"停止"很别扭 */\n.b-log {\n  height: 150px;\n  overflow: auto;\n  font-size: 11px;\n  line-height: 1.5;\n  color: #9aa0a6;\n}\n.b-log div { padding: 1px 0; word-break: break-all; }\n.b-tip { font-size: 11px; color: #b4b7bd; }\n';
+  var css = '/* 面板样式：中性灰为主，圆角克制，不用大色块 */\n#blcl-root {\n  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;\n  font-size: 12px;\n  color: #18191c;\n  line-height: 1.6;\n}\n\n/* ---------- 悬浮入口 ---------- */\n#blcl-fab {\n  position: fixed;\n  right: 20px;\n  bottom: 20px;\n  z-index: 99998;\n  height: 32px;\n  padding: 0 12px;\n  border: 0;\n  border-radius: 6px;\n  background: #18191c;\n  color: #fff;\n  font-size: 12px;\n  letter-spacing: .3px;\n  cursor: pointer;\n  opacity: .92;\n}\n#blcl-fab:hover { opacity: 1; }\n\n/* ---------- 面板 ---------- */\n#blcl-panel {\n  position: fixed;\n  right: 20px;\n  bottom: 60px;\n  z-index: 99999;\n  width: 460px;\n  max-height: 76vh;\n  overflow: hidden auto;\n  padding: 14px 16px 12px;\n  background: #fff;\n  border: 1px solid #e5e6e8;\n  border-radius: 8px;\n  box-shadow: 0 6px 24px rgba(0, 0, 0, .08);\n}\n#blcl-panel[hidden] { display: none; }\n\n#blcl-root .b-head {\n  display: flex;\n  align-items: baseline;\n  gap: 8px;\n  margin-bottom: 12px;\n}\n#blcl-root .b-title { font-size: 13px; font-weight: 500; letter-spacing: .2px; }\n#blcl-root .b-mode { font-size: 11px; color: #8a8f99; }\n#blcl-root .b-x {\n  margin-left: auto;\n  border: 0;\n  background: none;\n  padding: 0;\n  font-size: 16px;\n  line-height: 1;\n  color: #b4b7bd;\n  cursor: pointer;\n}\n#blcl-root .b-x:hover { color: #18191c; }\n\n/* ---------- 三个统计 ---------- */\n#blcl-root .b-sum {\n  display: flex;\n  border: 1px solid #e5e6e8;\n  border-radius: 6px;\n  overflow: hidden;\n  margin-bottom: 10px;\n}\n#blcl-root .b-sum-i {\n  flex: 1;\n  padding: 8px 0 7px;\n  text-align: center;\n  border-left: 1px solid #e5e6e8;\n}\n#blcl-root .b-sum-i:first-child { border-left: 0; }\n#blcl-root .b-num { font-size: 18px; font-weight: 500; letter-spacing: -.3px; line-height: 1.2; }\n#blcl-root .b-cap { font-size: 11px; color: #8a8f99; margin-top: 1px; }\n\n#blcl-root .b-status {\n  margin: 0 0 10px;\n  font-size: 11px;\n  color: #8a8f99;\n  word-break: break-all;\n}\n\n/* ---------- 操作条 ---------- */\n#blcl-root .b-bar {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-bottom: 8px;\n  flex-wrap: wrap;\n}\n#blcl-root .b-bar-thin { color: #8a8f99; }\n#blcl-root .b-spacer { flex: 1; }\n\n#blcl-root .b-btn {\n  height: 28px;\n  padding: 0 12px;\n  border: 1px solid #dcdee2;\n  border-radius: 4px;\n  background: #fff;\n  color: #18191c;\n  font-size: 12px;\n  cursor: pointer;\n}\n#blcl-root .b-btn:hover:not(:disabled) { border-color: #b4b7bd; }\n#blcl-root .b-btn:disabled { opacity: .4; cursor: not-allowed; }\n#blcl-root .b-primary {\n  background: #18191c;\n  border-color: #18191c;\n  color: #fff;\n}\n#blcl-root .b-primary:hover:not(:disabled) { background: #303136; border-color: #303136; }\n#blcl-root .b-danger { color: #c5372f; border-color: #e8d2d0; }\n#blcl-root .b-danger:hover:not(:disabled) { border-color: #c5372f; }\n\n#blcl-root .b-link {\n  border: 0;\n  background: none;\n  padding: 0;\n  font-size: 12px;\n  color: #6b7280;\n  cursor: pointer;\n}\n#blcl-root .b-link:hover { color: #18191c; }\n\n#blcl-root .b-check {\n  display: inline-flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 11px;\n  color: #6b7280;\n  cursor: pointer;\n}\n#blcl-root .b-check input[type="number"] {\n  width: 44px;\n  height: 22px;\n  padding: 0 4px;\n  border: 1px solid #dcdee2;\n  border-radius: 4px;\n  font-size: 11px;\n  color: #18191c;\n}\n\n/* ---------- 列表 ---------- */\n#blcl-root .b-list {\n  max-height: 300px;\n  overflow: auto;\n  border: 1px solid #e5e6e8;\n  border-radius: 6px;\n  margin-bottom: 8px;\n}\n#blcl-root .b-row {\n  display: flex;\n  gap: 8px;\n  padding: 8px 10px;\n  border-bottom: 1px solid #f1f2f3;\n  border-left: 2px solid transparent;\n}\n#blcl-root .b-row:last-child { border-bottom: 0; }\n#blcl-root .b-row.del { border-left-color: #d93a3a; }\n#blcl-root .b-row.pro { border-left-color: #4b7d2e; }\n#blcl-root .b-row.skip { border-left-color: #d8dade; }\n\n#blcl-root .b-pick { padding-top: 2px; }\n#blcl-root .b-body { min-width: 0; flex: 1; }\n\n#blcl-root .b-line {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n#blcl-root .b-tag { font-size: 11px; color: #6b7280; flex: none; }\n#blcl-root .b-row.del .b-tag { color: #c5372f; }\n#blcl-root .b-row.pro .b-tag { color: #4b7d2e; }\n#blcl-root .b-time { font-size: 11px; color: #b4b7bd; flex: none; }\n\n#blcl-root .b-sub {\n  flex: 1;\n  min-width: 80px;\n  font-size: 11px;\n  color: #8a8f99;\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n}\n#blcl-root .b-view { flex: none; color: #6b7280; font-size: 11px; text-decoration: underline; }\n#blcl-root .b-view:hover { color: #18191c; }\n\n#blcl-root .b-empty { padding: 20px; text-align: center; color: #b4b7bd; font-size: 12px; }\n\n/* ---------- 日志 ---------- */\n#blcl-root .b-loghead {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding-top: 6px;\n  border-top: 1px solid #f1f2f3;\n}\n/* 高度写死：日志一多面板就会往上长，按钮跟着跑，点"停止"很别扭 */\n#blcl-root .b-log {\n  height: 150px;\n  overflow: auto;\n  font-size: 11px;\n  line-height: 1.5;\n  color: #9aa0a6;\n}\n#blcl-root .b-log div { padding: 1px 0; word-break: break-all; }\n#blcl-root .b-tip { font-size: 11px; color: #b4b7bd; }\n';
   function apply() {
     var s = document.createElement('style');
     s.setAttribute('data-blcl', '1');
@@ -45,7 +45,7 @@
   window.BLCL = window.BLCL || {};
 
   window.BLCL.CFG = {
-    VERSION: '1.0.0',      /* 与 manifest.json 的 version 保持一致，界面上会显示 */
+    VERSION: '1.0.2',      /* 与 manifest.json 的 version 保持一致，界面上会显示 */
 
     /* ---- 安全开关 ---- */
     /* 用户 2026-10-18 确认扫描与判定准确无误后开放：
@@ -55,7 +55,7 @@
     delWarnOver: 20,       // 单次删除超过这个条数，弹窗里额外警告
 
     /* ---- 扫描 ---- */
-    apiPageMax: 200,       // 接口最多翻多少页（一页约 20 条，200 页足够）
+    apiPageMax: 200,       // 接口最多翻多少页（一页约 20 条，达到上限会提示扫描未完整）
     scrollWait: 2000,      // 接口不通走页面下滑时，每次下滑后等待毫秒
     scrollIdleMax: 8,      // 连续几次下滑没有新数据，就判定到底
     scrollRoundMax: 500,   // 下滑次数上限，防死循环
@@ -229,7 +229,9 @@
   /* 只有个人空间的「动态」页才启动：space.bilibili.com/{UID}/dynamic
      主页、收藏、追番这些页面一律不构建面板、不收集数据 */
   U.isSpaceDynamicPage = function () {
-    return /^https?:\/\/space\.bilibili\.com\/\d+\/dynamic/.test(location.href);
+    var page = location.href.match(/^https:\/\/space\.bilibili\.com\/(\d+)\/dynamic(?:[/?#]|$)/);
+    var account = document.cookie.match(/(?:^|;\s*)DedeUserID=(\d+)(?:;|$)/);
+    return !!(page && account && page[1] === account[1]);
   };
 
   /* ---------- 时间 ---------- */
@@ -270,12 +272,12 @@
   B.state = {
     uid: '',
     items: new Map(),     // 动态ID -> 接口返回的原始动态对象（诊断用）
-    cards: new Map(),     // 动态ID -> 从页面卡片解析出来的信息（主数据来源）
+    cards: new Map(),     // 页面卡片兜底，仅供核对
     records: [],          // 判定结果数组
     scanning: false,
     deleting: false,
     stop: false,
-    source: ''            // 数据来源：接口拦截 / 接口直连 / 页面元素
+    source: ''            // 数据来源：接口 / 页面
   };
   B.logs = [];
 
@@ -284,7 +286,7 @@
 
 
 /* ===== net.js ===== */
-/* 网络层：请求封装 + 拦截页面请求 + 动态列表接口 */
+/* 网络层：请求封装 + 动态列表接口 */
 (function () {
   'use strict';
   var B = window.BLCL;
@@ -295,66 +297,25 @@
   N.requestJson = function (url, opts) {
     opts = opts || {};
     return new Promise(function (resolve, reject) {
-      var timer = setTimeout(function () { reject(new Error('超时')); }, opts.timeout || CFG.probeTimeout);
+      var controller = new AbortController();
+      var timer = setTimeout(function () {
+        reject(new Error('超时'));
+        controller.abort();
+      }, opts.timeout || CFG.probeTimeout);
       fetch(url, {
         method: opts.method || 'GET',
         credentials: 'include',
         headers: Object.assign({ Accept: 'application/json' }, opts.headers || {}),
-        body: opts.body
-      }).then(function (r) { return r.json(); })
+        body: opts.body,
+        signal: controller.signal
+      }).then(function (r) {
+        if (r.status === 412) return { code: 412, message: 'HTTP 412（请求受限）' };
+        return r.json();
+      })
         .then(function (j) { clearTimeout(timer); resolve(j); })
         .catch(function (e) { clearTimeout(timer); reject(e); });
     });
   };
-
-  /* ---------- 拦截页面的动态列表请求 ----------
-     这是最准的数据来源：页面自己发的请求，带完整签名和 Cookie，我们只读响应副本。 */
-  N.installHooks = function (onFeedJson) {
-    if (N.__hooked) return;   /* 幂等：SPA 来回切换时不重复包装 */
-    N.__hooked = true;
-
-    /* 命中计数，用来判断"拦截到底有没有生效" */
-    var wrapped = function (j) {
-      N.hits++;
-      try { onFeedJson(j); } catch (e) {}
-    };
-
-    /* fetch */
-    var origFetch = window.fetch;
-    if (typeof origFetch === 'function') {
-      window.fetch = function () {
-        var p = origFetch.apply(this, arguments);
-        try {
-          var u = typeof arguments[0] === 'string' ? arguments[0] : (arguments[0] && arguments[0].url);
-          if (u && String(u).indexOf('feed/space') > -1) {
-            p.then(function (res) {
-              try { res.clone().json().then(wrapped).catch(function () {}); } catch (e) {}
-              return res;
-            }).catch(function () {});
-          }
-        } catch (e) {}
-        return p;
-      };
-    }
-    /* XMLHttpRequest（B站前端用的是 axios，走 XHR） */
-    var OP = XMLHttpRequest.prototype.open;
-    var SE = XMLHttpRequest.prototype.send;
-    XMLHttpRequest.prototype.open = function () {
-      this.__blclUrl = String(arguments[1] || '');
-      return OP.apply(this, arguments);
-    };
-    XMLHttpRequest.prototype.send = function () {
-      var self = this;
-      this.addEventListener('load', function () {
-        if (!self.__blclUrl || self.__blclUrl.indexOf('feed/space') === -1) return;
-        try { wrapped(JSON.parse(self.responseText)); } catch (e) {}
-      });
-      return SE.apply(this, arguments);
-    };
-  };
-
-  /* 拦截命中次数，用来判断拦截到底生效没有 */
-  N.hits = 0;
 
   /* ---------- WBI 签名 ----------
      B站部分接口要 w_rid + wts，不带就返回 -352 / -403。
@@ -426,6 +387,7 @@
     for (var i = 0; i < eps.length; i++) {
       try {
         var j = await N.requestJson(eps[i] + new URLSearchParams(params).toString(), { timeout: 12000 });
+        if (j && (j.code === 412 || j.code === -412)) return j;
         if (j && j.code === 0) { N.signMode = 'none'; return j; }
         last = j;
       } catch (e) {
@@ -439,6 +401,7 @@
     for (var k = 0; k < eps.length; k++) {
       try {
         var j2 = await N.requestJson(eps[k] + signedQuery(params), { timeout: 12000 });
+        if (j2 && (j2.code === 412 || j2.code === -412)) return j2;
         if (j2 && j2.code === 0) { N.signMode = 'wbi'; return j2; }
         last = j2;
       } catch (e2) {
@@ -577,7 +540,7 @@
     );
   };
 
-  /* ---------- 从页面卡片解析（现在的主数据来源）----------
+  /* ---------- 从页面卡片解析（接口不可用时兜底，仅供核对）----------
      关键：卡片里"互动抽奖"那个链接本身就带 business_id，
      直接拿它去查开奖状态，不用再推原动态 ID，也不用依赖接口拦截 */
 
@@ -627,7 +590,7 @@
       out.set(key, {
         key: key,
         id: id,
-        noId: !id,
+        noId: true, /* DOM 无法证明该链接属于本人转发，只供核对，不进入删除队列 */
         lotteryId: P.domLotteryId(el),
         isForward: /转发动态/.test(txt) ||
           !!el.querySelector('[class*="forward"], [class*="__orig"], [class*="dyn-orig"]'),
@@ -665,7 +628,7 @@
   /* 查询统计，给"接口全挂"这种情况留个线索 */
   L.stats = { probe: 0, fail: 0 };
 
-  /* 记住哪个抽奖接口能用，之后每条只发一次请求（原来每条都试两个，白白多一倍请求） */
+  /* 优先查上次命中官方抽奖的版本；空数据时仍检查另一版本 */
   L.mode = '';
 
   /* ---------- 查一条动态关联的官方抽奖 ----------
@@ -678,14 +641,15 @@
     };
     var order = L.mode === 'v1' ? ['v1', 'v2'] : ['v2', 'v1'];
 
+    var empty = false, failed = false;
     for (var i = 0; i < order.length; i++) {
       var key = order[i];
       L.stats.probe++;
       try {
         var j = await N.requestJson(urls[key], { timeout: CFG.probeTimeout });
-        if (j && j.code === 0) {
-          L.mode = key;   /* 这个接口能用，后面每条就只发它，省一半请求 */
+        if (j && j.code === 0 && j.data && typeof j.data === 'object' && !Array.isArray(j.data)) {
           if (j.data && j.data.lottery_id) {
+            L.mode = key;
             return {
               kind: 'official',
               status: Number(j.data.status),
@@ -693,59 +657,83 @@
               participants: Number(j.data.participants) || 0
             };
           }
-          return { kind: 'none' };   /* 接口正常但没有抽奖数据，不用再试另一个 */
+          empty = true; /* 一个版本为空时，仍检查另一个版本 */
+        } else {
+          failed = true;
+          L.stats.fail++;
         }
       } catch (e) {
+        failed = true;
         L.stats.fail++;
       }
     }
-    return { kind: 'none' };
+    return { kind: empty && !failed ? 'none' : 'error' };
   }
 
   /* 依次用 原动态ID → 自己动态ID 去查，任一命中即返回 */
   L.probeLottery = async function (ids) {
+    var failed = false;
     for (var i = 0; i < ids.length; i++) {
       if (!ids[i]) continue;
       var r = await probeOne(ids[i]);
       if (r.kind === 'official') return r;
+      if (r.kind === 'error') failed = true;
     }
-    return { kind: 'none' };
+    return { kind: failed ? 'error' : 'none' };
   };
 
   /* ---------- 文本兜底：从文案里解析开奖日期 ---------- */
-  L.extractDate = function (seg) {
-    var now = new Date(), m;
+  L.extractDate = function (seg, pubTs) {
+    var m, year, month, day;
     m = seg.match(/(20\d{2})\s*[-\/年.]\s*(\d{1,2})\s*[-\/月.]\s*(\d{1,2})\s*[日号]?/);
-    if (m) return new Date(+m[1], +m[2] - 1, +m[3], 23, 59, 59);
-
-    /* "26年11月15日" 这种两位年份 */
-    m = seg.match(/(\d{2})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
-    if (m) return new Date(2000 + (+m[1]), +m[2] - 1, +m[3], 23, 59, 59);
-
-    m = seg.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
-    if (m) {
-      var d = new Date(now.getFullYear(), +m[1] - 1, +m[2], 23, 59, 59);
-      /* 早于今天 90 天以上，说明是明年的日期 */
-      if (d.getTime() < now.getTime() - 90 * 86400000) {
-        d = new Date(now.getFullYear() + 1, +m[1] - 1, +m[2], 23, 59, 59);
-      }
-      return d;
+    if (m) { year = +m[1]; month = +m[2]; day = +m[3]; }
+    if (!m) {
+      m = seg.match(/(\d{2})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]?/);
+      if (m) { year = 2000 + (+m[1]); month = +m[2]; day = +m[3]; }
     }
-    m = seg.match(/(20\d{2})(\d{2})(\d{2})/);
-    if (m) return new Date(+m[1], +m[2] - 1, +m[3], 23, 59, 59);
-    return null;
+    if (!m) {
+      m = seg.match(/\b(20\d{2})(\d{2})(\d{2})\b/);
+      if (m) { year = +m[1]; month = +m[2]; day = +m[3]; }
+    }
+    if (!m) {
+      m = seg.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]?|\b(\d{1,2})\s*[\/.\-]\s*(\d{1,2})\b/);
+      if (!m || !pubTs) return null;
+      /* 用户规则：缺省年份取自己的转发年份，不按今天猜测跨年 */
+      year = new Date(pubTs * 1000).getFullYear();
+      month = +(m[1] || m[3]); day = +(m[2] || m[4]);
+    }
+    var tail = seg.slice(m.index + m[0].length);
+    var time = tail.match(/^\s*(?:[Tt]|晚上|下午|上午|中午|凌晨|早上)?\s*(\d{1,2})\s*(?:[:：]\s*(\d{2})(?:[:：]\s*(\d{2}))?|[点时](?:\s*(\d{1,2})\s*分?)?)/);
+    var hour = time ? +time[1] : 23;
+    var minute = time ? +(time[2] || time[4] || 0) : 59;
+    var second = time ? +(time[3] || 0) : 59;
+    var rest = time ? tail.slice(time[0].length).trim() : '';
+    if (time && /[点时]$/.test(time[0]) && /^半/.test(rest)) { minute = 30; rest = rest.slice(1); }
+    /* 不把“一刻”“PM”等未支持的时刻尾部静默丢掉，避免提前判为已开奖 */
+    if (time && /^(?:[一二三四五六七八九十零〇两\d半]|[:：]|am\b|pm\b)/i.test(rest)) return null;
+    if (time && /下午|晚上/.test(time[0]) && hour < 12) hour += 12;
+    if (time && /凌晨|上午|早上/.test(time[0]) && hour === 12) hour = 0;
+    if (time && /中午/.test(time[0]) && hour < 11) hour += 12;
+    var d = new Date(year, month - 1, day, hour, minute, second);
+    /* Date 会自动将 2月30日等非法值顺延，必须拒绝 */
+    if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day ||
+        d.getHours() !== hour || d.getMinutes() !== minute || d.getSeconds() !== second) return null;
+    return d;
   };
 
-  L.parseDrawDate = function (text) {
+  L.parseDrawDate = function (text, pubTs) {
     if (!text) return 0;
     var segs = String(text).replace(/\s+/g, ' ').split(/[\n。！!；;，,、|｜·•\r]+/);
     var best = 0;
     for (var i = 0; i < segs.length; i++) {
-      if (!CFG.lotteryKeyword.test(segs[i])) continue;
-      var d = L.extractDate(segs[i]);
-      if (d && !isNaN(d.getTime())) {
+      if (!/抽奖|开奖|截止|结束|公布(?:结果|名单)/.test(segs[i])) continue;
+      var dates = Array.from(segs[i].matchAll(/20\d{2}\s*[-\/年.]\s*\d{1,2}\s*[-\/月.]\s*\d{1,2}\s*[日号]?|\d{2}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*[日号]?|\b20\d{6}\b|\d{1,2}\s*月\s*\d{1,2}\s*[日号]?|\b\d{1,2}\s*[\/.\-]\s*\d{1,2}\b/g));
+      for (var k = 0; k < dates.length; k++) {
+        var end = k + 1 < dates.length ? dates[k + 1].index : segs[i].length;
+        var d = L.extractDate(segs[i].slice(dates[k].index, end), pubTs);
+        if (!d || isNaN(d.getTime())) return 0; /* 有歧义/非法日期时不凭另一个日期放行 */
         var t = d.getTime();
-        if (t > best) best = t; /* 取最晚的开奖时间，宁可保护 */
+        if (t > best) best = t; /* 同句多个日期也取最晚，避免把开始日期当作结束日期 */
       }
     }
     return best ? Math.floor(best / 1000) : 0;
@@ -785,7 +773,13 @@
     try {
       lot = await L.probeLottery([rec.origId, rec.id]);
     } catch (e) {
-      lot = { kind: 'none' };
+      lot = { kind: 'error' };
+    }
+
+    if (lot.kind === 'error') {
+      rec.verdict = 'protected';
+      rec.reason = '抽奖状态查询失败，暂时保护，请重扫';
+      return rec;
     }
 
     if (lot.kind === 'official') {
@@ -802,13 +796,13 @@
 
     /* ③ 没有官方数据，看文案里有没有抽奖/开奖字样 */
     if (CFG.lotteryKeyword.test(rec.text)) {
-      var dts = L.parseDrawDate(rec.text);
+      var dts = L.parseDrawDate(rec.text, rec.pubTs);
       rec.drawTs = dts;
       rec.weak = true;
       if (!dts) {
         /* 用户明确要求：没写开奖时间的，直接跳过 */
         rec.verdict = 'skip_nolottery';
-        rec.reason = '文本提到抽奖但没写开奖时间';
+        rec.reason = '文本开奖时间无法确认，请打开原动态核对';
       } else if (dts * 1000 < Date.now()) {
         rec.verdict = 'deletable';
         rec.reason = '文本判定开奖已过 · ' + U.fmtTime(dts);
@@ -829,10 +823,10 @@
   L.classifyCard = async function (c) {
     var rec = {
       id: c.id || c.key || '',
-      noId: !!c.noId,
+      noId: true, /* 页面兜底一律不执行删除 */
       origId: c.lotteryId || '',
       type: 'DOM',
-      pubTs: 0,
+      pubTs: c.pubTs || 0,
       timeText: c.timeText || '',
       text: c.text || '',
       verdict: 'skip_nolottery',
@@ -855,7 +849,13 @@
     if (c.id) ids.push(c.id);
 
     var lot = { kind: 'none' };
-    try { lot = await L.probeLottery(ids); } catch (e) {}
+    try { lot = await L.probeLottery(ids); } catch (e) { lot = { kind: 'error' }; }
+
+    if (lot.kind === 'error') {
+      rec.verdict = 'protected';
+      rec.reason = '抽奖状态查询失败，暂时保护，请重扫';
+      return rec;
+    }
 
     if (lot.kind === 'official') {
       rec.drawTs = lot.drawTs;
@@ -878,12 +878,12 @@
 
     /* 文本兜底 */
     if (CFG.lotteryKeyword.test(rec.text)) {
-      var dts = L.parseDrawDate(rec.text);
+      var dts = L.parseDrawDate(rec.text, rec.pubTs);
       rec.drawTs = dts;
       rec.weak = true;
       if (!dts) {
         rec.verdict = 'skip_nolottery';
-        rec.reason = '提到抽奖但没写开奖时间';
+        rec.reason = '文本开奖时间无法确认，请打开原动态核对';
       } else if (dts * 1000 < Date.now()) {
         rec.verdict = 'deletable';
         rec.reason = '文本判定开奖已过 · ' + U.fmtTime(dts);
@@ -916,15 +916,29 @@
   var S = {};
 
   S.lastErr = '';
+  S.readStatus = { complete: false, reason: '' };
 
   /* ---------- 主路径：接口翻页到底 ---------- */
   S.apiAll = async function (uid, onProgress) {
-    var offset = '', page = 0, dup = 0;
+    var offset = '', page = 0, seenOffsets = new Set();
     S.lastErr = '';
+    S.readStatus = { complete: false, reason: '', missingIds: 0 };
 
     while (page < CFG.apiPageMax && !B.state.stop) {
       page++;
-      var j = await N.fetchFeedPage(uid, offset);
+      seenOffsets.add(offset);
+      var j;
+      for (var attempt = 0; attempt < 3 && !B.state.stop; attempt++) {
+        try { j = await N.fetchFeedPage(uid, offset); }
+        catch (e) { j = { code: -999, message: (e && e.message) || '请求异常' }; }
+        if (j && j.code === 0) break;
+        if (j && (j.code === -352 || j.code === 412 || j.code === -412)) break;
+        if (attempt < 2 && !B.state.stop) {
+          onProgress('第 ' + page + ' 页读取失败，重试 ' + (attempt + 1) + '/2');
+          await U.sleep(1000);
+        }
+      }
+      if (B.state.stop && !j) break;
 
       if (!j) { S.lastErr = '无响应'; onProgress('接口无响应'); break; }
       if (j.code !== 0) {
@@ -933,24 +947,45 @@
         break;
       }
 
-      var items = (j.data && j.data.items) || [];
+      if (!j.data || !Array.isArray(j.data.items)) {
+        S.lastErr = '第 ' + page + ' 页响应缺少动态列表';
+        break;
+      }
+      var items = j.data.items;
       var added = 0;
       for (var i = 0; i < items.length; i++) {
         var id = P.itemId(items[i]);
+        if (!id) S.readStatus.missingIds++;
         if (id && !B.state.items.has(id)) { B.state.items.set(id, items[i]); added++; }
       }
       onProgress('读取第 ' + page + ' 页 · 新增 ' + added + ' · 累计 ' + B.state.items.size + ' 条');
 
-      if (!items.length) break;
-      dup = added === 0 ? dup + 1 : 0;
-      if (dup >= 3) break;                      /* 连续 3 页全是重复才算到底 */
-      if (!j.data.has_more) break;
+      if (j.data.has_more === false || j.data.has_more === 0 || j.data.has_more === '0') {
+        S.readStatus.complete = true;
+        break;
+      }
+      if (!(j.data.has_more === true || j.data.has_more === 1 || j.data.has_more === '1')) {
+        S.lastErr = '第 ' + page + ' 页未返回有效的 has_more';
+        break;
+      }
 
       var next = j.data.offset == null ? '' : String(j.data.offset);
-      if (!next || next === offset) break;
+      if (!next || seenOffsets.has(next)) {
+        S.lastErr = '第 ' + page + ' 页游标缺失或循环，接口仍提示有下一页';
+        break;
+      }
       offset = next;
       await U.sleep(U.rnd(250, 550));
     }
+
+    if (B.state.stop) S.readStatus.reason = '用户停止读取';
+    else if (S.lastErr) S.readStatus.reason = S.lastErr;
+    else if (!S.readStatus.complete) S.readStatus.reason = '达到扫描页数上限 ' + CFG.apiPageMax;
+    if (S.readStatus.missingIds) {
+      S.readStatus.complete = false;
+      S.readStatus.reason += (S.readStatus.reason ? '；' : '') + S.readStatus.missingIds + ' 条缺少动态ID';
+    }
+    if (!S.readStatus.complete) onProgress('扫描未完整：' + S.readStatus.reason + '；保留已读取的 ' + B.state.items.size + ' 条');
 
     if (N.signMode === 'wbi' && B.state.items.size) onProgress('接口已带 WBI 签名');
     return B.state.items.size;
@@ -1067,7 +1102,6 @@
     L.stats.probe = 0;
     L.stats.fail = 0;
     L.mode = '';
-    N.hits = 0;
     N.signMode = '';
     S.lastErr = '';
 
@@ -1087,7 +1121,7 @@
       }
 
       /* "停止"只停读取，不停判定：已经拿到手的要判完，否则等于白扫（第 8 轮踩过同样的坑） */
-      if (stoppedByUser) {
+      if (stoppedByUser && U.isSpaceDynamicPage()) {
         B.state.stop = false;
         say('已停止读取' + (useApi || B.state.cards.size
           ? '，继续判定已收集的 ' + (useApi ? B.state.items.size : B.state.cards.size) + ' 条'
@@ -1115,9 +1149,10 @@
         await U.sleep(CFG.probeGap + U.rnd(0, 250));
       }
 
+      if (L.stats.fail > 0) say(L.stats.fail + ' 次抽奖请求失败；无法确认状态的条目已保护');
       if (B.state.stop) say('已停止，保留已判定的 ' + B.state.records.length + ' 条');
+      else if (useApi && !S.readStatus.complete) say('判定结束，扫描未完整：' + S.readStatus.reason + '；已判定 ' + B.state.records.length + ' 条');
       else say('扫描完成，共 ' + B.state.records.length + ' 条（来源：' + B.state.source + '）');
-      if (L.stats.fail > 0) say(L.stats.fail + ' 次抽奖状态查询失败，已按未开奖保护');
 
       if (CFG.debug) {
         console.table(B.state.records.slice(0, 20).map(function (r) {
@@ -1147,12 +1182,25 @@
   var U = B.utils, CFG = B.CFG, N = B.net, P = B.parser;
   var D = {};
 
+  /* UI 和实际队列共用这一资格判断，避免“可以勾选但进不了队列” */
+  D.isEligible = function (r) {
+    return !!r && r.verdict === 'deletable' && !r.deleted && !r.noId && /^\d+$/.test(r.id || '');
+  };
+
+  async function pause(ms) {
+    /* 限速期间也响应停止，避免风控暂停时界面还要等整整一分钟 */
+    for (var left = ms; left > 0 && !B.state.stop && U.isSpaceDynamicPage();) {
+      var step = Math.min(left, 200);
+      await U.sleep(step);
+      left -= step;
+    }
+  }
+
   /* 通过过滤条件的待删条目 */
   D.pickTargets = function (minDays) {
     var md = Number(minDays) || 0;
     return B.state.records.filter(function (r) {
-      if (r.verdict !== 'deletable' || r.deleted || !r.checked) return false;
-      if (r.noId || /^dom_/.test(r.id)) return false;   /* 页面兜底拿不到真ID，删不了 */
+      if (!D.isEligible(r) || !r.checked) return false;
       if (!md) return true;
       return r.drawTs && U.daysAgo(r.drawTs) >= md;
     });
@@ -1188,13 +1236,17 @@
         msg += '\n\n⚠️ 一次删 ' + targets.length + ' 条偏多，建议先勾几条试试，确认没问题再继续。';
       }
       var ok = confirm(msg + '\n\n确定继续？');
-      if (!ok) { say('已取消'); return { ok: 0, fail: 0, dry: false }; }
+      if (!ok) { say('已取消'); return { ok: 0, fail: 0, dry: false, cancelled: true }; }
     }
 
     /* 不再自动导出 CSV：那个下载动作会让页面跳走（Edge 报"无法访问此页面"），而且用户确认没用 */
-    var okN = 0, failN = 0;
+    var okN = 0, failN = 0, stopped = false;
     for (var i = 0; i < targets.length; i++) {
-      if (B.state.stop) { say('已手动停止'); break; }
+      if (B.state.stop || !U.isSpaceDynamicPage() || (B.state.uid && B.state.uid !== U.getUid())) {
+        stopped = true;
+        say('已停止：用户停止、账号变化或已离开原空间动态页');
+        break;
+      }
       var r = targets[i];
       say('删除中 ' + (i + 1) + '/' + targets.length + ' · ' + r.id);
 
@@ -1209,23 +1261,24 @@
         okN++;
         r.deleted = true;
         r.checked = false;
+        r.err = '';
         say('删除成功 ' + r.id);
       } else {
         failN++;
         r.err = (res && res.message) || '未知错误';
         say('删除失败 ' + r.id + ' · ' + r.err);
-        if (res && (res.code === -352 || res.code === 412)) {
+        if (res && (res.code === -352 || res.code === 412 || res.code === -412)) {
           say('触发风控，暂停 ' + (CFG.riskPause / 1000) + ' 秒');
-          await U.sleep(CFG.riskPause);
+          await pause(CFG.riskPause);
         }
       }
 
       if (onProgress) onProgress();
-      if (i < targets.length - 1) await U.sleep(U.rnd(CFG.delMin, CFG.delMax));
+      if (i < targets.length - 1) await pause(U.rnd(CFG.delMin, CFG.delMax));
     }
 
     say('删除结束：成功 ' + okN + ' 条，失败 ' + failN + ' 条');
-    return { ok: okN, fail: failN, dry: false };
+    return { ok: okN, fail: failN, dry: false, stopped: stopped };
   };
 
   B.deleter = D;
@@ -1271,7 +1324,7 @@
         '<div class="b-bar b-bar-thin">' +
           '<label class="b-check"><input type="checkbox" id="blcl-f-skip"> 显示已跳过</label>' +
           '<span class="b-spacer"></span>' +
-          '<button class="b-link" id="blcl-sel-official" type="button">全选已开奖</button>' +
+          '<button class="b-link" id="blcl-sel-official" type="button">全选官方已开奖</button>' +
           '<button class="b-link" id="blcl-clear" type="button">取消勾选</button>' +
         '</div>' +
 
@@ -1364,7 +1417,7 @@
 
   UI.selectBy = function (weak) {
     B.state.records.forEach(function (r) {
-      if (r.verdict === 'deletable' && !r.deleted && !!r.weak === !!weak && UI.passDays(r)) r.checked = true;
+      if (B.deleter.isEligible(r) && !!r.weak === !!weak && UI.passDays(r)) r.checked = true;
     });
     UI.render();
   };
@@ -1395,8 +1448,15 @@
       var kind = r.verdict === 'deletable' ? 'del' : (r.verdict === 'protected' ? 'pro' : 'skip');
       if (kind === 'skip' && !showSkip) continue;
 
-      var canDel = kind === 'del' && !r.deleted && UI.passDays(r);
+      var canDel = B.deleter.isEligible(r) && UI.passDays(r);
       var tag = VERDICT_TEXT[kind] + (r.weak ? ' · 文本' : '');
+      var links = '';
+      if (!r.noId && /^\d+$/.test(r.id)) {
+        links += '<a class="b-view" href="https://www.bilibili.com/opus/' + r.id + '" target="_blank" rel="noopener noreferrer">转发动态</a>';
+      }
+      if (/^\d+$/.test(r.origId || '') && r.origId !== r.id) {
+        links += '<a class="b-view" href="https://www.bilibili.com/opus/' + r.origId + '" target="_blank" rel="noopener noreferrer">原动态</a>';
+      }
 
       html +=
         '<div class="b-row ' + kind + '">' +
@@ -1405,9 +1465,8 @@
           '<div class="b-body">' +
             '<div class="b-line">' +
               '<span class="b-tag">' + tag + '</span>' +
-              '<span class="b-sub">' + U.esc(r.reason) + (r.err ? ' · 失败 ' + U.esc(r.err) : '') +
-                '<a href="https://www.bilibili.com/opus/' + U.esc(r.id) + '" target="_blank" rel="noreferrer">查看</a>' +
-              '</span>' +
+              '<span class="b-sub" title="' + U.esc(r.reason) + '">' + U.esc(r.reason) + (r.err ? ' · 失败 ' + U.esc(r.err) : '') + '</span>' +
+              links +
               (r.deleted ? '<span class="b-tag">已删除</span>' : '') +
               '<span class="b-time">' + U.esc(r.timeText || (U.fmtTime(r.pubTs) || '').slice(5) || '—') + '</span>' +
             '</div>' +
@@ -1439,7 +1498,7 @@
     UI.setRunning(busy);
     if (UI.el.del) {
       UI.el.del.disabled = busy || !B.state.records.some(function (r) {
-        return r.checked && r.verdict === 'deletable';
+        return r.checked && B.deleter.isEligible(r);
       });
     }
   };
@@ -1458,21 +1517,10 @@
   var U = B.utils;
   var M = {};
 
-  /* 保留拦截只用来数命中次数（日志里显示），不再作为数据来源：
-     实测 B站前端把原生 fetch 缓存进自己的模块变量，外面包装拦不到。
-     数据改由 scanner.apiAll() 直接翻页读取。 */
-  function ensureHooks() {
-    B.net.installHooks(function () { /* 仅计数 */ });
-  }
-
-  /* 必须在 document_start 同步装好：页面初始化时会把原生 fetch / XHR 存进模块变量，
-     晚一步再包装就对它无效，表现就是"页面滚了很远，但只收到首屏那点数据" */
-  ensureHooks();
-
   M.startScan = async function () {
-    if (B.state.scanning) return;
+    if (B.state.scanning || B.state.deleting) return;
     if (!U.isSpaceDynamicPage()) {
-      B.ui.setStatus('请先进入个人空间的动态页');
+      B.ui.setStatus('请先登录并进入本人空间的动态页');
       return;
     }
     /* 先把状态置位再刷界面，否则"停止"按钮会被算成不可用 */
@@ -1483,6 +1531,7 @@
       await B.scanner.runScan(function (t) { B.ui.setStatus(t); });
     } catch (e) {
       U.log('扫描中止：' + ((e && e.message) || e));
+      B.ui.setStatus('扫描异常已停止，已保留结果，请查看日志');
     } finally {
       B.state.scanning = false;
       B.ui.render();
@@ -1490,17 +1539,24 @@
   };
 
   M.startDelete = async function () {
-    if (B.state.deleting) return;
+    if (B.state.deleting || B.state.scanning) return;
+    if (!U.isSpaceDynamicPage() || (B.state.uid && B.state.uid !== U.getUid())) {
+      B.ui.setStatus('请回到扫描时的本人空间动态页，重新扫描后再删除');
+      return;
+    }
+    B.state.stop = false;
     B.state.deleting = true;
     B.ui.setRunning(true);
     try {
       var res = await B.deleter.runDelete(B.ui.minDays(), function () { B.ui.render(); });
       if (res.dry) B.ui.setStatus('演练完成 · ' + res.fail + ' 条待删（未真正删除）');
-      else B.ui.setStatus('删除结束 · 成功 ' + res.ok + ' · 失败 ' + res.fail);
+      else B.ui.setStatus((res.cancelled ? '已取消' : res.stopped ? '已停止' : '删除结束') + ' · 成功 ' + res.ok + ' · 失败 ' + res.fail);
     } catch (e) {
       U.log('删除流程异常：' + ((e && e.message) || e));
+      B.ui.setStatus('删除异常已停止，请核对日志与实际动态后重新扫描');
     } finally {
       B.state.deleting = false;
+      B.state.stop = false;
       B.ui.render();
     }
   };
@@ -1511,7 +1567,6 @@
     var root = document.getElementById('blcl-root');
 
     if (onPage) {
-      ensureHooks();
       if (!root) {
         B.ui.build();
         U.log('已进入动态页，插件启动');

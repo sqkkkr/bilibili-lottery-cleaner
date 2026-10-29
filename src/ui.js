@@ -36,7 +36,7 @@
         '<div class="b-bar b-bar-thin">' +
           '<label class="b-check"><input type="checkbox" id="blcl-f-skip"> 显示已跳过</label>' +
           '<span class="b-spacer"></span>' +
-          '<button class="b-link" id="blcl-sel-official" type="button">全选已开奖</button>' +
+          '<button class="b-link" id="blcl-sel-official" type="button">全选官方已开奖</button>' +
           '<button class="b-link" id="blcl-clear" type="button">取消勾选</button>' +
         '</div>' +
 
@@ -129,7 +129,7 @@
 
   UI.selectBy = function (weak) {
     B.state.records.forEach(function (r) {
-      if (r.verdict === 'deletable' && !r.deleted && !!r.weak === !!weak && UI.passDays(r)) r.checked = true;
+      if (B.deleter.isEligible(r) && !!r.weak === !!weak && UI.passDays(r)) r.checked = true;
     });
     UI.render();
   };
@@ -160,8 +160,15 @@
       var kind = r.verdict === 'deletable' ? 'del' : (r.verdict === 'protected' ? 'pro' : 'skip');
       if (kind === 'skip' && !showSkip) continue;
 
-      var canDel = kind === 'del' && !r.deleted && UI.passDays(r);
+      var canDel = B.deleter.isEligible(r) && UI.passDays(r);
       var tag = VERDICT_TEXT[kind] + (r.weak ? ' · 文本' : '');
+      var links = '';
+      if (!r.noId && /^\d+$/.test(r.id)) {
+        links += '<a class="b-view" href="https://www.bilibili.com/opus/' + r.id + '" target="_blank" rel="noopener noreferrer">转发动态</a>';
+      }
+      if (/^\d+$/.test(r.origId || '') && r.origId !== r.id) {
+        links += '<a class="b-view" href="https://www.bilibili.com/opus/' + r.origId + '" target="_blank" rel="noopener noreferrer">原动态</a>';
+      }
 
       html +=
         '<div class="b-row ' + kind + '">' +
@@ -170,9 +177,8 @@
           '<div class="b-body">' +
             '<div class="b-line">' +
               '<span class="b-tag">' + tag + '</span>' +
-              '<span class="b-sub">' + U.esc(r.reason) + (r.err ? ' · 失败 ' + U.esc(r.err) : '') +
-                '<a href="https://www.bilibili.com/opus/' + U.esc(r.id) + '" target="_blank" rel="noreferrer">查看</a>' +
-              '</span>' +
+              '<span class="b-sub" title="' + U.esc(r.reason) + '">' + U.esc(r.reason) + (r.err ? ' · 失败 ' + U.esc(r.err) : '') + '</span>' +
+              links +
               (r.deleted ? '<span class="b-tag">已删除</span>' : '') +
               '<span class="b-time">' + U.esc(r.timeText || (U.fmtTime(r.pubTs) || '').slice(5) || '—') + '</span>' +
             '</div>' +
@@ -204,7 +210,7 @@
     UI.setRunning(busy);
     if (UI.el.del) {
       UI.el.del.disabled = busy || !B.state.records.some(function (r) {
-        return r.checked && r.verdict === 'deletable';
+        return r.checked && B.deleter.isEligible(r);
       });
     }
   };

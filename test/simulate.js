@@ -83,9 +83,9 @@ global.fetch = async function (url) {
   logs.forEach((l) => console.log('  ' + l));
   console.log('\n--- 结果 ---');
   recs.forEach((r) => console.log(`${r.id}\t${r.verdict}\t${r.reason}\torig=${r.origId || '-'}`));
-  const bad = recs.find((r) => r.id === '9001' && r.verdict !== 'deletable')
-    || recs.find((r) => r.id === '9002' && r.verdict !== 'skip_original')
-    || recs.find((r) => r.id === '9003' && r.verdict !== 'skip_nolottery');
+  const expected = { '9001': 'deletable', '9002': 'skip_original', '9003': 'skip_nolottery' };
+  const bad = recs.length !== 3 || Object.keys(expected).some(id => !recs.some(r => r.id === id && r.verdict === expected[id]));
   console.log('\n接口调用数：' + calls.length);
   console.log(bad ? '❌ 有用例不符合预期' : '✅ 全部符合预期');
+  if (bad) process.exitCode = 1;
 })().catch((e) => { console.error('崩溃', e); process.exit(1); });

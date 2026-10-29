@@ -42,15 +42,15 @@
 }
 #blcl-panel[hidden] { display: none; }
 
-.b-head {
+#blcl-root .b-head {
   display: flex;
   align-items: baseline;
   gap: 8px;
   margin-bottom: 12px;
 }
-.b-title { font-size: 13px; font-weight: 500; letter-spacing: .2px; }
-.b-mode { font-size: 11px; color: #8a8f99; }
-.b-x {
+#blcl-root .b-title { font-size: 13px; font-weight: 500; letter-spacing: .2px; }
+#blcl-root .b-mode { font-size: 11px; color: #8a8f99; }
+#blcl-root .b-x {
   margin-left: auto;
   border: 0;
   background: none;
@@ -60,27 +60,27 @@
   color: #b4b7bd;
   cursor: pointer;
 }
-.b-x:hover { color: #18191c; }
+#blcl-root .b-x:hover { color: #18191c; }
 
 /* ---------- 三个统计 ---------- */
-.b-sum {
+#blcl-root .b-sum {
   display: flex;
   border: 1px solid #e5e6e8;
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 10px;
 }
-.b-sum-i {
+#blcl-root .b-sum-i {
   flex: 1;
   padding: 8px 0 7px;
   text-align: center;
   border-left: 1px solid #e5e6e8;
 }
-.b-sum-i:first-child { border-left: 0; }
-.b-num { font-size: 18px; font-weight: 500; letter-spacing: -.3px; line-height: 1.2; }
-.b-cap { font-size: 11px; color: #8a8f99; margin-top: 1px; }
+#blcl-root .b-sum-i:first-child { border-left: 0; }
+#blcl-root .b-num { font-size: 18px; font-weight: 500; letter-spacing: -.3px; line-height: 1.2; }
+#blcl-root .b-cap { font-size: 11px; color: #8a8f99; margin-top: 1px; }
 
-.b-status {
+#blcl-root .b-status {
   margin: 0 0 10px;
   font-size: 11px;
   color: #8a8f99;
@@ -88,17 +88,17 @@
 }
 
 /* ---------- 操作条 ---------- */
-.b-bar {
+#blcl-root .b-bar {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
   flex-wrap: wrap;
 }
-.b-bar-thin { color: #8a8f99; }
-.b-spacer { flex: 1; }
+#blcl-root .b-bar-thin { color: #8a8f99; }
+#blcl-root .b-spacer { flex: 1; }
 
-.b-btn {
+#blcl-root .b-btn {
   height: 28px;
   padding: 0 12px;
   border: 1px solid #dcdee2;
@@ -108,18 +108,18 @@
   font-size: 12px;
   cursor: pointer;
 }
-.b-btn:hover:not(:disabled) { border-color: #b4b7bd; }
-.b-btn:disabled { opacity: .4; cursor: not-allowed; }
-.b-primary {
+#blcl-root .b-btn:hover:not(:disabled) { border-color: #b4b7bd; }
+#blcl-root .b-btn:disabled { opacity: .4; cursor: not-allowed; }
+#blcl-root .b-primary {
   background: #18191c;
   border-color: #18191c;
   color: #fff;
 }
-.b-primary:hover:not(:disabled) { background: #303136; border-color: #303136; }
-.b-danger { color: #c5372f; border-color: #e8d2d0; }
-.b-danger:hover:not(:disabled) { border-color: #c5372f; }
+#blcl-root .b-primary:hover:not(:disabled) { background: #303136; border-color: #303136; }
+#blcl-root .b-danger { color: #c5372f; border-color: #e8d2d0; }
+#blcl-root .b-danger:hover:not(:disabled) { border-color: #c5372f; }
 
-.b-link {
+#blcl-root .b-link {
   border: 0;
   background: none;
   padding: 0;
@@ -127,9 +127,9 @@
   color: #6b7280;
   cursor: pointer;
 }
-.b-link:hover { color: #18191c; }
+#blcl-root .b-link:hover { color: #18191c; }
 
-.b-check {
+#blcl-root .b-check {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -137,7 +137,7 @@
   color: #6b7280;
   cursor: pointer;
 }
-.b-check input[type="number"] {
+#blcl-root .b-check input[type="number"] {
   width: 44px;
   height: 22px;
   padding: 0 4px;
@@ -148,54 +148,55 @@
 }
 
 /* ---------- 列表 ---------- */
-.b-list {
+#blcl-root .b-list {
   max-height: 300px;
   overflow: auto;
   border: 1px solid #e5e6e8;
   border-radius: 6px;
   margin-bottom: 8px;
 }
-.b-row {
+#blcl-root .b-row {
   display: flex;
   gap: 8px;
   padding: 8px 10px;
   border-bottom: 1px solid #f1f2f3;
   border-left: 2px solid transparent;
 }
-.b-row:last-child { border-bottom: 0; }
-.b-row.del { border-left-color: #d93a3a; }
-.b-row.pro { border-left-color: #4b7d2e; }
-.b-row.skip { border-left-color: #d8dade; }
+#blcl-root .b-row:last-child { border-bottom: 0; }
+#blcl-root .b-row.del { border-left-color: #d93a3a; }
+#blcl-root .b-row.pro { border-left-color: #4b7d2e; }
+#blcl-root .b-row.skip { border-left-color: #d8dade; }
 
-.b-pick { padding-top: 2px; }
-.b-body { min-width: 0; flex: 1; }
+#blcl-root .b-pick { padding-top: 2px; }
+#blcl-root .b-body { min-width: 0; flex: 1; }
 
-.b-line {
+#blcl-root .b-line {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
-.b-tag { font-size: 11px; color: #6b7280; flex: none; }
-.b-row.del .b-tag { color: #c5372f; }
-.b-row.pro .b-tag { color: #4b7d2e; }
-.b-time { font-size: 11px; color: #b4b7bd; flex: none; }
+#blcl-root .b-tag { font-size: 11px; color: #6b7280; flex: none; }
+#blcl-root .b-row.del .b-tag { color: #c5372f; }
+#blcl-root .b-row.pro .b-tag { color: #4b7d2e; }
+#blcl-root .b-time { font-size: 11px; color: #b4b7bd; flex: none; }
 
-.b-sub {
+#blcl-root .b-sub {
   flex: 1;
-  min-width: 0;
+  min-width: 80px;
   font-size: 11px;
   color: #8a8f99;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.b-sub a { color: #8a8f99; margin-left: 6px; text-decoration: none; border-bottom: 1px solid #dcdee2; }
-.b-sub a:hover { color: #18191c; border-bottom-color: #18191c; }
+#blcl-root .b-view { flex: none; color: #6b7280; font-size: 11px; text-decoration: underline; }
+#blcl-root .b-view:hover { color: #18191c; }
 
-.b-empty { padding: 20px; text-align: center; color: #b4b7bd; font-size: 12px; }
+#blcl-root .b-empty { padding: 20px; text-align: center; color: #b4b7bd; font-size: 12px; }
 
 /* ---------- 日志 ---------- */
-.b-loghead {
+#blcl-root .b-loghead {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -203,12 +204,12 @@
   border-top: 1px solid #f1f2f3;
 }
 /* 高度写死：日志一多面板就会往上长，按钮跟着跑，点"停止"很别扭 */
-.b-log {
+#blcl-root .b-log {
   height: 150px;
   overflow: auto;
   font-size: 11px;
   line-height: 1.5;
   color: #9aa0a6;
 }
-.b-log div { padding: 1px 0; word-break: break-all; }
-.b-tip { font-size: 11px; color: #b4b7bd; }
+#blcl-root .b-log div { padding: 1px 0; word-break: break-all; }
+#blcl-root .b-tip { font-size: 11px; color: #b4b7bd; }

@@ -6,12 +6,25 @@
   var U = B.utils, CFG = B.CFG, N = B.net, P = B.parser;
   var D = {};
 
+  /* UI 和实际队列共用这一资格判断，避免“可以勾选但进不了队列” */
+  D.isEligible = function (r) {
+    return !!r && r.verdict === 'deletable' && !r.deleted && !r.noId && /^\d+$/.test(r.id || '');
+  };
+
+  async function pause(ms) {
+    /* 限速期间也响应停止，避免风控暂停时界面还要等整整一分钟 */
+    for (var left = ms; left > 0 && !B.state.stop && U.isSpaceDynamicPage();) {
+      var step = Math.min(left, 200);
+      await U.sleep(step);
+      left -= step;
+    }
+  }
+
   /* 通过过滤条件的待删条目 */
   D.pickTargets = function (minDays) {
     var md = Number(minDays) || 0;
     return B.state.records.filter(function (r) {
-      if (r.verdict !== 'deletable' || r.deleted || !r.checked) return false;
-      if (r.noId || /^dom_/.test(r.id)) return false;   /* 页面兜底拿不到真ID，删不了 */
+      if (!D.isEligible(r) || !r.checked) return false;
       if (!md) return true;
       return r.drawTs && U.daysAgo(r.drawTs) >= md;
     });
@@ -47,13 +60,17 @@
         msg += '\n\n⚠️ 一次删 ' + targets.length + ' 条偏多，建议先勾几条试试，确认没问题再继续。';
       }
       var ok = confirm(msg + '\n\n确定继续？');
-      if (!ok) { say('已取消'); return { ok: 0, fail: 0, dry: false }; }
+      if (!ok) { say('已取消'); return { ok: 0, fail: 0, dry: false, cancelled: true }; }
     }
 
     /* 不再自动导出 CSV：那个下载动作会让页面跳走（Edge 报"无法访问此页面"），而且用户确认没用 */
-    var okN = 0, failN = 0;
+    var okN = 0, failN = 0, stopped = false;
     for (var i = 0; i < targets.length; i++) {
-      if (B.state.stop) { say('已手动停止'); break; }
+      if (B.state.stop || !U.isSpaceDynamicPage() || (B.state.uid && B.state.uid !== U.getUid())) {
+        stopped = true;
+        say('已停止：用户停止、账号变化或已离开原空间动态页');
+        break;
+      }
       var r = targets[i];
       say('删除中 ' + (i + 1) + '/' + targets.length + ' · ' + r.id);
 
@@ -68,23 +85,24 @@
         okN++;
         r.deleted = true;
         r.checked = false;
+        r.err = '';
         say('删除成功 ' + r.id);
       } else {
         failN++;
         r.err = (res && res.message) || '未知错误';
         say('删除失败 ' + r.id + ' · ' + r.err);
-        if (res && (res.code === -352 || res.code === 412)) {
+        if (res && (res.code === -352 || res.code === 412 || res.code === -412)) {
           say('触发风控，暂停 ' + (CFG.riskPause / 1000) + ' 秒');
-          await U.sleep(CFG.riskPause);
+          await pause(CFG.riskPause);
         }
       }
 
       if (onProgress) onProgress();
-      if (i < targets.length - 1) await U.sleep(U.rnd(CFG.delMin, CFG.delMax));
+      if (i < targets.length - 1) await pause(U.rnd(CFG.delMin, CFG.delMax));
     }
 
     say('删除结束：成功 ' + okN + ' 条，失败 ' + failN + ' 条');
-    return { ok: okN, fail: failN, dry: false };
+    return { ok: okN, fail: failN, dry: false, stopped: stopped };
   };
 
   B.deleter = D;

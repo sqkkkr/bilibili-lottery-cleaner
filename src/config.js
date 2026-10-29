@@ -4,7 +4,7 @@
   window.BLCL = window.BLCL || {};
 
   window.BLCL.CFG = {
-    VERSION: '1.0.0',      /* 与 manifest.json 的 version 保持一致，界面上会显示 */
+    VERSION: '1.0.2',      /* 与 manifest.json 的 version 保持一致，界面上会显示 */
 
     /* ---- 安全开关 ---- */
     /* 用户 2026-10-18 确认扫描与判定准确无误后开放：
@@ -14,7 +14,7 @@
     delWarnOver: 20,       // 单次删除超过这个条数，弹窗里额外警告
 
     /* ---- 扫描 ---- */
-    apiPageMax: 200,       // 接口最多翻多少页（一页约 20 条，200 页足够）
+    apiPageMax: 200,       // 接口最多翻多少页（一页约 20 条，达到上限会提示扫描未完整）
     scrollWait: 2000,      // 接口不通走页面下滑时，每次下滑后等待毫秒
     scrollIdleMax: 8,      // 连续几次下滑没有新数据，就判定到底
     scrollRoundMax: 500,   // 下滑次数上限，防死循环

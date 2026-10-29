@@ -11,15 +11,29 @@
   var S = {};
 
   S.lastErr = '';
+  S.readStatus = { complete: false, reason: '' };
 
   /* ---------- 主路径：接口翻页到底 ---------- */
   S.apiAll = async function (uid, onProgress) {
-    var offset = '', page = 0, dup = 0;
+    var offset = '', page = 0, seenOffsets = new Set();
     S.lastErr = '';
+    S.readStatus = { complete: false, reason: '', missingIds: 0 };
 
     while (page < CFG.apiPageMax && !B.state.stop) {
       page++;
-      var j = await N.fetchFeedPage(uid, offset);
+      seenOffsets.add(offset);
+      var j;
+      for (var attempt = 0; attempt < 3 && !B.state.stop; attempt++) {
+        try { j = await N.fetchFeedPage(uid, offset); }
+        catch (e) { j = { code: -999, message: (e && e.message) || '请求异常' }; }
+        if (j && j.code === 0) break;
+        if (j && (j.code === -352 || j.code === 412 || j.code === -412)) break;
+        if (attempt < 2 && !B.state.stop) {
+          onProgress('第 ' + page + ' 页读取失败，重试 ' + (attempt + 1) + '/2');
+          await U.sleep(1000);
+        }
+      }
+      if (B.state.stop && !j) break;
 
       if (!j) { S.lastErr = '无响应'; onProgress('接口无响应'); break; }
       if (j.code !== 0) {
@@ -28,24 +42,45 @@
         break;
       }
 
-      var items = (j.data && j.data.items) || [];
+      if (!j.data || !Array.isArray(j.data.items)) {
+        S.lastErr = '第 ' + page + ' 页响应缺少动态列表';
+        break;
+      }
+      var items = j.data.items;
       var added = 0;
       for (var i = 0; i < items.length; i++) {
         var id = P.itemId(items[i]);
+        if (!id) S.readStatus.missingIds++;
         if (id && !B.state.items.has(id)) { B.state.items.set(id, items[i]); added++; }
       }
       onProgress('读取第 ' + page + ' 页 · 新增 ' + added + ' · 累计 ' + B.state.items.size + ' 条');
 
-      if (!items.length) break;
-      dup = added === 0 ? dup + 1 : 0;
-      if (dup >= 3) break;                      /* 连续 3 页全是重复才算到底 */
-      if (!j.data.has_more) break;
+      if (j.data.has_more === false || j.data.has_more === 0 || j.data.has_more === '0') {
+        S.readStatus.complete = true;
+        break;
+      }
+      if (!(j.data.has_more === true || j.data.has_more === 1 || j.data.has_more === '1')) {
+        S.lastErr = '第 ' + page + ' 页未返回有效的 has_more';
+        break;
+      }
 
       var next = j.data.offset == null ? '' : String(j.data.offset);
-      if (!next || next === offset) break;
+      if (!next || seenOffsets.has(next)) {
+        S.lastErr = '第 ' + page + ' 页游标缺失或循环，接口仍提示有下一页';
+        break;
+      }
       offset = next;
       await U.sleep(U.rnd(250, 550));
     }
+
+    if (B.state.stop) S.readStatus.reason = '用户停止读取';
+    else if (S.lastErr) S.readStatus.reason = S.lastErr;
+    else if (!S.readStatus.complete) S.readStatus.reason = '达到扫描页数上限 ' + CFG.apiPageMax;
+    if (S.readStatus.missingIds) {
+      S.readStatus.complete = false;
+      S.readStatus.reason += (S.readStatus.reason ? '；' : '') + S.readStatus.missingIds + ' 条缺少动态ID';
+    }
+    if (!S.readStatus.complete) onProgress('扫描未完整：' + S.readStatus.reason + '；保留已读取的 ' + B.state.items.size + ' 条');
 
     if (N.signMode === 'wbi' && B.state.items.size) onProgress('接口已带 WBI 签名');
     return B.state.items.size;
@@ -162,7 +197,6 @@
     L.stats.probe = 0;
     L.stats.fail = 0;
     L.mode = '';
-    N.hits = 0;
     N.signMode = '';
     S.lastErr = '';
 
@@ -182,7 +216,7 @@
       }
 
       /* "停止"只停读取，不停判定：已经拿到手的要判完，否则等于白扫（第 8 轮踩过同样的坑） */
-      if (stoppedByUser) {
+      if (stoppedByUser && U.isSpaceDynamicPage()) {
         B.state.stop = false;
         say('已停止读取' + (useApi || B.state.cards.size
           ? '，继续判定已收集的 ' + (useApi ? B.state.items.size : B.state.cards.size) + ' 条'
@@ -210,9 +244,10 @@
         await U.sleep(CFG.probeGap + U.rnd(0, 250));
       }
 
+      if (L.stats.fail > 0) say(L.stats.fail + ' 次抽奖请求失败；无法确认状态的条目已保护');
       if (B.state.stop) say('已停止，保留已判定的 ' + B.state.records.length + ' 条');
+      else if (useApi && !S.readStatus.complete) say('判定结束，扫描未完整：' + S.readStatus.reason + '；已判定 ' + B.state.records.length + ' 条');
       else say('扫描完成，共 ' + B.state.records.length + ' 条（来源：' + B.state.source + '）');
-      if (L.stats.fail > 0) say(L.stats.fail + ' 次抽奖状态查询失败，已按未开奖保护');
 
       if (CFG.debug) {
         console.table(B.state.records.slice(0, 20).map(function (r) {

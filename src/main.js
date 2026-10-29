@@ -7,21 +7,10 @@
   var U = B.utils;
   var M = {};
 
-  /* 保留拦截只用来数命中次数（日志里显示），不再作为数据来源：
-     实测 B站前端把原生 fetch 缓存进自己的模块变量，外面包装拦不到。
-     数据改由 scanner.apiAll() 直接翻页读取。 */
-  function ensureHooks() {
-    B.net.installHooks(function () { /* 仅计数 */ });
-  }
-
-  /* 必须在 document_start 同步装好：页面初始化时会把原生 fetch / XHR 存进模块变量，
-     晚一步再包装就对它无效，表现就是"页面滚了很远，但只收到首屏那点数据" */
-  ensureHooks();
-
   M.startScan = async function () {
-    if (B.state.scanning) return;
+    if (B.state.scanning || B.state.deleting) return;
     if (!U.isSpaceDynamicPage()) {
-      B.ui.setStatus('请先进入个人空间的动态页');
+      B.ui.setStatus('请先登录并进入本人空间的动态页');
       return;
     }
     /* 先把状态置位再刷界面，否则"停止"按钮会被算成不可用 */
@@ -32,6 +21,7 @@
       await B.scanner.runScan(function (t) { B.ui.setStatus(t); });
     } catch (e) {
       U.log('扫描中止：' + ((e && e.message) || e));
+      B.ui.setStatus('扫描异常已停止，已保留结果，请查看日志');
     } finally {
       B.state.scanning = false;
       B.ui.render();
@@ -39,17 +29,24 @@
   };
 
   M.startDelete = async function () {
-    if (B.state.deleting) return;
+    if (B.state.deleting || B.state.scanning) return;
+    if (!U.isSpaceDynamicPage() || (B.state.uid && B.state.uid !== U.getUid())) {
+      B.ui.setStatus('请回到扫描时的本人空间动态页，重新扫描后再删除');
+      return;
+    }
+    B.state.stop = false;
     B.state.deleting = true;
     B.ui.setRunning(true);
     try {
       var res = await B.deleter.runDelete(B.ui.minDays(), function () { B.ui.render(); });
       if (res.dry) B.ui.setStatus('演练完成 · ' + res.fail + ' 条待删（未真正删除）');
-      else B.ui.setStatus('删除结束 · 成功 ' + res.ok + ' · 失败 ' + res.fail);
+      else B.ui.setStatus((res.cancelled ? '已取消' : res.stopped ? '已停止' : '删除结束') + ' · 成功 ' + res.ok + ' · 失败 ' + res.fail);
     } catch (e) {
       U.log('删除流程异常：' + ((e && e.message) || e));
+      B.ui.setStatus('删除异常已停止，请核对日志与实际动态后重新扫描');
     } finally {
       B.state.deleting = false;
+      B.state.stop = false;
       B.ui.render();
     }
   };
@@ -60,7 +57,6 @@
     var root = document.getElementById('blcl-root');
 
     if (onPage) {
-      ensureHooks();
       if (!root) {
         B.ui.build();
         U.log('已进入动态页，插件启动');

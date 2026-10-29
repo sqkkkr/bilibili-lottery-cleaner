@@ -102,7 +102,7 @@
     );
   };
 
-  /* ---------- 从页面卡片解析（现在的主数据来源）----------
+  /* ---------- 从页面卡片解析（接口不可用时兜底，仅供核对）----------
      关键：卡片里"互动抽奖"那个链接本身就带 business_id，
      直接拿它去查开奖状态，不用再推原动态 ID，也不用依赖接口拦截 */
 
@@ -152,7 +152,7 @@
       out.set(key, {
         key: key,
         id: id,
-        noId: !id,
+        noId: true, /* DOM 无法证明该链接属于本人转发，只供核对，不进入删除队列 */
         lotteryId: P.domLotteryId(el),
         isForward: /转发动态/.test(txt) ||
           !!el.querySelector('[class*="forward"], [class*="__orig"], [class*="dyn-orig"]'),

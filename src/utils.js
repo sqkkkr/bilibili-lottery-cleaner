@@ -33,7 +33,9 @@
   /* 只有个人空间的「动态」页才启动：space.bilibili.com/{UID}/dynamic
      主页、收藏、追番这些页面一律不构建面板、不收集数据 */
   U.isSpaceDynamicPage = function () {
-    return /^https?:\/\/space\.bilibili\.com\/\d+\/dynamic/.test(location.href);
+    var page = location.href.match(/^https:\/\/space\.bilibili\.com\/(\d+)\/dynamic(?:[/?#]|$)/);
+    var account = document.cookie.match(/(?:^|;\s*)DedeUserID=(\d+)(?:;|$)/);
+    return !!(page && account && page[1] === account[1]);
   };
 
   /* ---------- 时间 ---------- */
@@ -74,12 +76,12 @@
   B.state = {
     uid: '',
     items: new Map(),     // 动态ID -> 接口返回的原始动态对象（诊断用）
-    cards: new Map(),     // 动态ID -> 从页面卡片解析出来的信息（主数据来源）
+    cards: new Map(),     // 页面卡片兜底，仅供核对
     records: [],          // 判定结果数组
     scanning: false,
     deleting: false,
     stop: false,
-    source: ''            // 数据来源：接口拦截 / 接口直连 / 页面元素
+    source: ''            // 数据来源：接口 / 页面
   };
   B.logs = [];
 

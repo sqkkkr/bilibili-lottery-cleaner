@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "B站抽奖动态清理器",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "minimum_chrome_version": "111",
   "description": "自动扫描空间动态，只清理已开奖的转发抽奖动态；未开奖、判定不出的一律保护。",
   "icons": {
